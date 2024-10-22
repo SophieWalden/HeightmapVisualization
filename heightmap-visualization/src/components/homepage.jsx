@@ -7,27 +7,31 @@ function Homepage(props){
     
     return (
         <div id="homepage-container">
-            <ScrollContainer>
+            <ScrollContainer className="scroll-container">
                 <ScrollPage  className="scroll-page">
                     <Animator animation={batch(Fade(), Sticky(), MoveOut(0, -600))}>
                         <div id="title-page">
-                            <iframe
+                            <video
                                 width="100%"
                                 height="100%"
-                                src="https://www.youtube.com/embed/hXD8itTKdY0?autoplay=1&loop=1&playlist=hXD8itTKdY0&controls=0&showinfo=0&rel=0&mute=1" 
-                                frameBorder="0"
-                                allow="autoplay; encrypted-media"
-                                allowFullScreen
+                                loop     
+                                muted   
+                                disablePictureInPicture 
+                                autoPlay 
                                 style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                zIndex: -1,
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    zIndex: -1,
                                 }}
-                            />
+                                >
+                                <source src="https://i.imgur.com/k8NObB1.mp4" type="video/mp4" />
+                            Your browser does not support the video tag.
+                            </video>
+
                             <h2>Pathfinding from Drone Footage</h2>
                             <h3>By Dyllon Dunton and Sophie Walden</h3>
                         
@@ -39,19 +43,21 @@ function Homepage(props){
                     <Animator animation={FadeUp}>
                     <div className="scroll-container">
                         <h3>Find Drone Footage</h3>
-                        <iframe
+                        <video
                                 width="40%"
-                                height="40%"
-                                src="https://www.youtube.com/embed/oRyTeo2b-2A?autoplay=1&loop=1&playlist=oRyTeo2b-2A&controls=0&showinfo=0&rel=0&mute=1" 
-                                frameBorder="0"
-                                allow="autoplay; encrypted-media"
-                                allowFullScreen
+                                height="auto"
+                                loop     
+                                muted   
+                                autoPlay 
+                                disablePictureInPicture 
                                 style={{
-        
-                                objectFit: 'cover',
-                                zIndex: -1,
+                                    zIndex: -1,
+                                    borderRadius: "10px"
                                 }}
-                            />
+                                >
+                                <source src="https://i.imgur.com/18TVwlP.mp4" type="video/mp4" />
+                            Your browser does not support the video tag.
+                            </video>
                     </div>
                     </Animator>
                 </ScrollPage>

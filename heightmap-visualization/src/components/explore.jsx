@@ -76,7 +76,7 @@ function Explore() {
 
   return (
     <div id="explore-container">
-      <Canvas camera={{ position: [0, 150, 100], fov: 75 }}>
+      <Canvas camera={{ position: [0, 150, 100], fov: 75}}>
         <ambientLight intensity={0.5} />
         <directionalLight color="white" intensity={1} position={[0, 10, 5]} />
         <directionalLight color="white" intensity={0.5} position={[-5, -5, 10]} />

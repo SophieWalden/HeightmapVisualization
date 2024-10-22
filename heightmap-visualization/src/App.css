@@ -7,6 +7,8 @@
   margin: 0;
   padding: 0;
   background-color: grey;
+  scrollbar-width: none; 
+  -ms-overflow-style: none;  
 }
 
 #explore-container{
@@ -23,9 +25,11 @@
 
 #homepage{
   height: 900vh !important;
-  overflow-y: scroll;
+
   padding: 0;
   margin: 0;
+  scrollbar-width: none; 
+  -ms-overflow-style: none;  
 }
 
 .scroll-container{
@@ -34,6 +38,8 @@
   align-items: center;
   width: 100vw;
   height: 100vh;
+  scrollbar-width: none; 
+  -ms-overflow-style: none;  
 }
 
 .scroll-container img{
@@ -122,4 +128,14 @@
 
 .scroll-container h3{
   font-size: 2vw;
+}
+
+.scroll-container img,
+.scroll-container iframe{
+  border-radius: 10px;
+}
+
+.scroll-container{
+  padding: 0;
+  margin: 0;
 }

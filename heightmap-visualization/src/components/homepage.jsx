@@ -42,7 +42,12 @@ function Homepage(props){
                 <ScrollPage>
                     <Animator animation={FadeUp}>
                     <div className="scroll-container">
-                        <h3>Find Drone Footage</h3>
+                        <div className="scroll-text">
+                            <h3>Find Drone Footage</h3>
+                            <p className="scroll-descriptions">Drone footage is gathered from YouTube. Here we prioritize clean top down scrolling footage of scenes with a lot of depth</p>
+                        </div> 
+                        
+
                         <video
                                 width="40%"
                                 height="auto"
@@ -65,16 +70,22 @@ function Homepage(props){
                     <Animator animation={FadeUp}>
                     <div className="scroll-container">
                         <img src="https://i.imgur.com/nnfMOtD.png"></img>
-                        <h3>Create Heightmaps</h3>
-        
+
+                        <div className="scroll-text">
+                            <h3>Create Heightmaps</h3>
+                            <p className="scroll-descriptions">The drone footage is stitched into a single image. This image is run through the machine learning model ZoeDepth to get a relative depth map</p>
+                        </div>
                     </div>
                     </Animator>
                 </ScrollPage>
                 <ScrollPage>
                     <Animator animation={FadeUp}>
                     <div className="scroll-container">
-                        <h3>Run a Pathfinding Algorithim</h3>
-                        <img src="https://i.imgur.com/8nyCmF3.png"></img>
+                        <div className="scroll-text">
+                            <h3>Run Pathfinding Algorithims</h3>
+                            <p className="scroll-descriptions">Both A* and ROT* Pathfinding algorithims are run on the depth map to plot an estimated route for a rover to take throughout the drone footage</p>
+                        </div> 
+                        <img id="pathfinding-image" src="https://i.imgur.com/8nyCmF3.png"></img>
                     </div>
                     </Animator>
                 </ScrollPage>

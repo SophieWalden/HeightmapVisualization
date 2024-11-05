@@ -7,17 +7,23 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { useGLTF } from '@react-three/drei';
+import { CSSProperties } from "react";
+import CircleLoader from "react-spinners/ClipLoader";
 
 import positions1 from '../../src/path.json';
 import positions2 from '../../src/path2.json';
 import positions3 from '../../src/path3.json';
 import positions4 from '../../src/path4.json';
 
-const RoverModel = forwardRef(({ position }, ref) => {
+const RoverModel = forwardRef(({ position, loading, setLoading }, ref) => {
   const { scene } = useGLTF('/HeightmapVisualization/scene.gltf');
+  if (loading == true) setLoading(false);
   scene.scale.set(0.00035, 0.00035, 0.00035); // Adjust the scale as needed
   return <primitive object={scene} position={position} ref={ref} />;
 });
+
+
+
 
 function Explore() {
   const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg"];
@@ -25,6 +31,8 @@ function Explore() {
   const [groundMesh, setGroundMesh] = useState(null);
   const [size, setSize] = useState(1, 1);
   const [groundGeo, setGroundGeo] = useState(new THREE.PlaneGeometry(size[0], size[1], 256, 256))
+
+  const [loading, setLoading] = useState(true);
 
 
   const finenesses = [60, 60, 60, 1];
@@ -185,6 +193,18 @@ function Explore() {
 
   return (
     <div id="explore-container">
+
+      <div className={`${loading ? "" : "hiddenDiv"}`} id="loading-div">
+          <h3> Loading </h3>
+          <CircleLoader
+            className="loader"
+            color={"#FFFFFF"}
+            size={150}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+        </div>
+
       <div id="exploration-selector">
         {heightmaps.map((_, index) => {
           return (
@@ -192,7 +212,12 @@ function Explore() {
           )
         })}
       </div>
-      <Canvas camera={{ position: [0, 500, 250], fov: 75,  near: 0.1, far: 10000, rotation: [-Math.PI / 2, 0, 0] }}>
+
+     
+        
+        
+  
+      <Canvas className={`${loading ? "hideCanvas" : ""}`} id="canvas" camera={{ position: [0, 500, 250], fov: 75,  near: 0.1, far: 10000, rotation: [-Math.PI / 2, 0, 0] }}>
         <ambientLight intensity={0.5} />
         <directionalLight color="white" intensity={1} position={[0, 10, 5]} />
         <directionalLight color="white" intensity={0.5} position={[-5, -5, 10]} />
@@ -201,7 +226,7 @@ function Explore() {
           <primitive object={groundMesh} rotation={[-Math.PI / 2, 0, 0]} />
         )}
 
-        <RoverModel position={[0, 0, 0]} ref={roverRef} />
+        <RoverModel loading={loading} setLoading={setLoading} position={[0, 0, 0]} ref={roverRef} />
 
         <FlyControls movementSpeed={100} rollSpeed={0.5} dragToLook={false} />
       </Canvas>

@@ -8,6 +8,34 @@
   z-index: 1;
 }
 
+.hideCanvas{
+  z-index: -1;
+}
+
+.hiddenDiv{
+  border: solid red 2px;
+  display: none !important;
+}
+
+.loader{
+  font-size: 1vw;
+  border-width: 5px;
+  color: red;
+  border-color: red;
+}
+
+#loading-div{
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 3vw;
+  width: 100vw;
+  height: 100vh;
+}
+
 #exploration-selector h3{
   width: 5vw;
   height: 5vh;

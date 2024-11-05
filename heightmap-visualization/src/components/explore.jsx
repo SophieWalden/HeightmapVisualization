@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import '../App.css';
 import { Canvas } from '@react-three/fiber';
 import { FlyControls } from '@react-three/drei';
@@ -7,15 +7,25 @@ import originalPositions from '../../src/path.json';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { useGLTF } from '@react-three/drei';
+
+const RoverModel = forwardRef(({ position }, ref) => {
+  const { scene } = useGLTF('/HeightmapVisualization/scene.gltf');
+  scene.scale.set(0.00035, 0.00035, 0.00035); // Adjust the scale as needed
+  return <primitive object={scene} position={position} ref={ref} />;
+});
 
 function Explore() {
-  const offset = [-1700, 450, -90]
+  const offset = [-1700, 450, -90];
   const heightmapImage = "https://i.imgur.com/LJ0F8QF.png";
   const originalImage = "https://i.imgur.com/2uUjPaA.png";
   const [groundMesh, setGroundMesh] = useState(null);
   const groundGeo = new THREE.PlaneGeometry(3313, 986, 256, 256);
   const scale = 2.59;
   const pathHeight = 140; 
+  const [activeCamera, setActiveCamera] = useState('main');
+  const roverCameraRef = useRef(new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)); // Rover camera
+
   const scaledPositions = originalPositions.map(([x, y]) => [x * scale, -y * scale]); 
   let pathPoints = [];
   const [roverPoints, setRoverPoints] = useState([]);
@@ -48,17 +58,15 @@ function Explore() {
       const [x, y] = scaledPositions[i];
       const z = pathHeight;
       pathPoints.push(new THREE.Vector3(x + offset[0], y + offset[1], z + offset[2] + i * -0.02));
-      roverPoints.push(new THREE.Vector3(x + offset[0], y + offset[1], z + offset[2] + i * -0.02));
     }
-
     console.log(`Total path points: ${pathPoints.length}`);
     const lineGeometry = new LineGeometry();
     lineGeometry.setPositions(pathPoints.flatMap(point => [point.x, point.y, point.z]));
-    setRoverPoints(pathPoints)
+    setRoverPoints(pathPoints);
 
     const lineMaterial = new LineMaterial({
       color: 0xff0000,
-      linewidth: 10, 
+      linewidth: 0, 
       depthTest: true,
       transparent: true,
     });
@@ -66,58 +74,65 @@ function Explore() {
     const line = new Line2(lineGeometry, lineMaterial);
     line.computeLineDistances();
 
-    groundMesh.add(line)
+    groundMesh.add(line);
 
     return () => {
       groundMesh.remove(line);
       lineGeometry.dispose();
       lineMaterial.dispose();
     };
-  }, [groundMesh]); 
+  }, [groundMesh]);
 
-
-
-  
-  // Creating a line that travels the suggested path
   const [index, setIndex] = useState(0);
-  useEffect(() => {
-    
+  const roverRef = useRef(null);
 
-    const interval = setInterval(() => {
-        if (roverPoints != [] && roverPoints.length != 0){
-          setIndex((oldIndex) => (oldIndex + 1) % roverPoints.length)
-          
-          let offsetPoint = roverPoints[index];
-          offsetPoint.z -= 100
-          const lineGeometry = new LineGeometry();
-          lineGeometry.setPositions([roverPoints[index], offsetPoint].flatMap(point => [point.x, point.y, point.z]));
-  
+  const [targetPosition, setTargetPosition] = useState(new THREE.Vector3());
 
-          const lineMaterial = new LineMaterial({
-            color: 0x00ff00,
-            linewidth: 30, 
-            depthTest: true,
-            transparent: true,
-          });
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (roverPoints.length > 0) {
+      // Calculate the current and next index
+      const currentIndex = index;
+      const nextIndex = (currentIndex + 1) % roverPoints.length;
+      
+      const currentPoint = roverPoints[currentIndex];
+      let nextPoint = roverPoints[nextIndex];
+      nextPoint = new THREE.Vector3(nextPoint.x, nextPoint.z, -nextPoint.y);
 
-          const line = new Line2(lineGeometry, lineMaterial);
-          line.computeLineDistances();
+      // Set the target position to the next point
+      setTargetPosition(nextPoint.clone());
 
-          groundMesh.add(line)
-          console.log(line);
+      // Move the rover smoothly towards the target position
+      if (roverRef.current) {
+        const roverPosition = roverRef.current.position;
+        const speed = 0.6; // Adjust the speed as necessary
+
+        // Lerp to the target position
+        roverPosition.lerp(targetPosition, speed);
+        
+        // Update rotation based on direction to the target
+        const direction = new THREE.Vector3().subVectors(targetPosition, roverPosition);
+        direction.y = 0; // Keep Y zero for horizontal rotation
+        if (direction.length() > 0.01) { // Only rotate if there's significant direction
+          direction.normalize();
+          const yaw = Math.atan2(direction.x, direction.z);
+          roverRef.current.rotation.y = yaw;
+        } else {
+          // If close enough to the target, increment the index
+          setIndex(nextIndex);
         }
-    }, 1000);
+      }
+    }
+  }, 100);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [roverPoints, index, groundMesh]);
-  
-  
+  return () => {
+    clearInterval(interval);
+  };
+}, [roverPoints, index, targetPosition]);
 
   return (
     <div id="explore-container">
-      <Canvas camera={{ position: [0, 150, 100], fov: 75}}>
+      <Canvas camera={{ position: [0, 500, 250], fov: 75,  near: 0.1, far: 10000, rotation: [-Math.PI / 2, 0, 0] }}>
         <ambientLight intensity={0.5} />
         <directionalLight color="white" intensity={1} position={[0, 10, 5]} />
         <directionalLight color="white" intensity={0.5} position={[-5, -5, 10]} />
@@ -125,6 +140,8 @@ function Explore() {
         {groundMesh && (
           <primitive object={groundMesh} rotation={[-Math.PI / 2, 0, 0]} />
         )}
+
+        <RoverModel position={[0, 0, 0]} ref={roverRef} />
 
         <FlyControls movementSpeed={100} rollSpeed={0.5} dragToLook={false} />
       </Canvas>

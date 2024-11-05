@@ -9,6 +9,7 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
 function Explore() {
+  const offset = [-1700, 450, -90]
   const heightmapImage = "https://i.imgur.com/LJ0F8QF.png";
   const originalImage = "https://i.imgur.com/2uUjPaA.png";
   const [groundMesh, setGroundMesh] = useState(null);
@@ -16,6 +17,8 @@ function Explore() {
   const scale = 2.59;
   const pathHeight = 140; 
   const scaledPositions = originalPositions.map(([x, y]) => [x * scale, -y * scale]); 
+  let pathPoints = [];
+  const [roverPoints, setRoverPoints] = useState([]);
 
   const sampleRate = 30; 
 
@@ -41,17 +44,17 @@ function Explore() {
   useEffect(() => {
     if (!groundMesh) return;
 
-    const pathPoints = [];
-    const offset = [-1700, 450, -90]
     for (let i = 0; i < scaledPositions.length; i += sampleRate) {
       const [x, y] = scaledPositions[i];
       const z = pathHeight;
       pathPoints.push(new THREE.Vector3(x + offset[0], y + offset[1], z + offset[2] + i * -0.02));
+      roverPoints.push(new THREE.Vector3(x + offset[0], y + offset[1], z + offset[2] + i * -0.02));
     }
 
     console.log(`Total path points: ${pathPoints.length}`);
     const lineGeometry = new LineGeometry();
     lineGeometry.setPositions(pathPoints.flatMap(point => [point.x, point.y, point.z]));
+    setRoverPoints(pathPoints)
 
     const lineMaterial = new LineMaterial({
       color: 0xff0000,
@@ -72,6 +75,44 @@ function Explore() {
     };
   }, [groundMesh]); 
 
+
+
+  
+  // Creating a line that travels the suggested path
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    
+
+    const interval = setInterval(() => {
+        if (roverPoints != [] && roverPoints.length != 0){
+          setIndex((oldIndex) => (oldIndex + 1) % roverPoints.length)
+          
+          let offsetPoint = roverPoints[index];
+          offsetPoint.z -= 100
+          const lineGeometry = new LineGeometry();
+          lineGeometry.setPositions([roverPoints[index], offsetPoint].flatMap(point => [point.x, point.y, point.z]));
+  
+
+          const lineMaterial = new LineMaterial({
+            color: 0x00ff00,
+            linewidth: 30, 
+            depthTest: true,
+            transparent: true,
+          });
+
+          const line = new Line2(lineGeometry, lineMaterial);
+          line.computeLineDistances();
+
+          groundMesh.add(line)
+          console.log(line);
+        }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [roverPoints, index, groundMesh]);
+  
   
 
   return (

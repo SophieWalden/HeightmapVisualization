@@ -16,21 +16,40 @@ const RoverModel = forwardRef(({ position }, ref) => {
 });
 
 function Explore() {
-  const offset = [-1700, 450, -90];
   const heightmapImage = "https://i.imgur.com/LJ0F8QF.png";
   const originalImage = "https://i.imgur.com/2uUjPaA.png";
   const [groundMesh, setGroundMesh] = useState(null);
   const groundGeo = new THREE.PlaneGeometry(3313, 986, 256, 256);
-  const scale = 2.59;
+  const offset = [-3313/2, 986/2,-20];
+  const [scale, setScale] = useState(1);
   const pathHeight = 140; 
   const [activeCamera, setActiveCamera] = useState('main');
   const roverCameraRef = useRef(new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)); // Rover camera
 
-  const scaledPositions = originalPositions.map(([x, y]) => [x * scale, -y * scale]); 
+  const scaledPositions = originalPositions["path"].map(([x, y, z]) => [x * scale, y, z * scale]); 
   let pathPoints = [];
   const [roverPoints, setRoverPoints] = useState([]);
 
   const sampleRate = 30; 
+
+  useEffect(() => {
+    // Function to load an image and return its dimensions
+    const loadImage = (src) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => resolve({ width: img.width, height: img.height });
+      });
+    };
+
+    // Load both images and calculate scale
+    Promise.all([loadImage(originalImage)])
+      .then(([originalDimensions]) => {
+        // Calculate the scale relative to the original image
+        const newScale = originalDimensions.width / originalPositions["size"][0];
+        setScale(newScale);
+      });
+  }, []);
 
   useEffect(() => {
     const disMap = new THREE.TextureLoader().load(heightmapImage);
@@ -55,9 +74,8 @@ function Explore() {
     if (!groundMesh) return;
 
     for (let i = 0; i < scaledPositions.length; i += sampleRate) {
-      const [x, y] = scaledPositions[i];
-      const z = pathHeight;
-      pathPoints.push(new THREE.Vector3(x + offset[0], y + offset[1], z + offset[2] + i * -0.02));
+      const [x, y, z] = scaledPositions[i];
+      pathPoints.push(new THREE.Vector3(x + offset[0], -z + offset[1], y * 0.7 + offset[2]));
     }
     console.log(`Total path points: ${pathPoints.length}`);
     const lineGeometry = new LineGeometry();
@@ -81,7 +99,7 @@ function Explore() {
       lineGeometry.dispose();
       lineMaterial.dispose();
     };
-  }, [groundMesh]);
+  }, [groundMesh, scale]);
 
   const [index, setIndex] = useState(0);
   const roverRef = useRef(null);

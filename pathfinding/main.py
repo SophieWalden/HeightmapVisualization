@@ -22,16 +22,19 @@ pygame.init()
 fps = 60
 fpsClock = pygame.time.Clock()
  
-width, height = 1280, 381
+image_file_name = "bg4.jpg"
+bg = pygame.image.load(image_file_name)
+width, height = bg.get_width() // 1, bg.get_height() // 1
+
+bg = pygame.transform.scale(bg, (width, height))
 screen = pygame.display.set_mode((width, height))
 
-bg = pygame.transform.scale(pygame.image.load(image_file_name), (width, height))
+
 
 import heapq, math
-size = [1080, 720]
 def cost(node, origin, target, heightmap):
-    distance_from_origin = ((node[0]-origin[0])**2 + (node[1] - origin[1])**2 + (heightmap[node[1]][node[0]] - heightmap[origin[1]][origin[0]])**2*3)**.5
-    distance_from_target = ((node[0]-target[0])**2 + (node[1] - target[1])**2 + (heightmap[node[1]][node[0]] - heightmap[target[1]][target[0]])**2*3)**.5
+    distance_from_origin = ((node[0]-origin[0])**2 + (node[1] - origin[1])**2 + (heightmap[node[1]][node[0]] - heightmap[origin[1]][origin[0]])**2*30)**.5
+    distance_from_target = ((node[0]-target[0])**2 + (node[1] - target[1])**2 + (heightmap[node[1]][node[0]] - heightmap[target[1]][target[0]])**2*30)**.5
 
     return distance_from_origin + distance_from_target
 
@@ -44,7 +47,7 @@ def AStar(origin, target, heightmap):
 
     while nodes:
         chosenNode, path = heapq.heappop(nodes)[1]
-        print(f"{colored('Nodes Searched: ', 'blue')}{colored(len(seenNodes), 'green')}/{colored(size[0]*size[1],'green')}")
+        print(f"{colored('Nodes Searched: ', 'blue')}{colored(len(seenNodes), 'green')}/{colored(width * height,'green')}")
 
 
         if chosenNode[0] == target[0] and chosenNode[1] == target[1]:

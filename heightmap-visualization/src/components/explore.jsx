@@ -3,11 +3,15 @@ import '../App.css';
 import { Canvas } from '@react-three/fiber';
 import { FlyControls } from '@react-three/drei';
 import * as THREE from 'three';
-import originalPositions from '../../src/path.json';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { useGLTF } from '@react-three/drei';
+
+import positions1 from '../../src/path.json';
+import positions2 from '../../src/path2.json';
+import positions3 from '../../src/path3.json';
+import positions4 from '../../src/path4.json';
 
 const RoverModel = forwardRef(({ position }, ref) => {
   const { scene } = useGLTF('/HeightmapVisualization/scene.gltf');
@@ -16,21 +20,25 @@ const RoverModel = forwardRef(({ position }, ref) => {
 });
 
 function Explore() {
-  const heightmapImage = "https://i.imgur.com/LJ0F8QF.png";
-  const originalImage = "https://i.imgur.com/2uUjPaA.png";
+  const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg"];
+  const images = ["https://i.imgur.com/2uUjPaA.png", "https://i.imgur.com/Geop1Vf.jpeg", "https://i.imgur.com/mUJITfR.png", "https://i.imgur.com/qJgQvHn.jpeg"]
   const [groundMesh, setGroundMesh] = useState(null);
-  const groundGeo = new THREE.PlaneGeometry(3313, 986, 256, 256);
-  const offset = [-3313/2, 986/2,-20];
+  const [size, setSize] = useState(1, 1);
+  const [groundGeo, setGroundGeo] = useState(new THREE.PlaneGeometry(size[0], size[1], 256, 256))
+
+
+  const finenesses = [60, 60, 60, 1];
+  const [offset, setOffset] = useState([-3313/2, 986/2,0]);
   const [scale, setScale] = useState(1);
-  const pathHeight = 140; 
   const [activeCamera, setActiveCamera] = useState('main');
   const roverCameraRef = useRef(new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)); // Rover camera
 
-  const scaledPositions = originalPositions["path"].map(([x, y, z]) => [x * scale, y, z * scale]); 
+  const positions = [positions1, positions2, positions3, positions4]
+  const [visualizationIndex, setVisualizationIndex] = useState(1);
   let pathPoints = [];
   const [roverPoints, setRoverPoints] = useState([]);
 
-  const sampleRate = 30; 
+  const sampleRate = 20; 
 
   useEffect(() => {
     // Function to load an image and return its dimensions
@@ -42,21 +50,24 @@ function Explore() {
       });
     };
 
-    // Load both images and calculate scale
-    Promise.all([loadImage(originalImage)])
+    Promise.all([loadImage(images[visualizationIndex])])
       .then(([originalDimensions]) => {
-        // Calculate the scale relative to the original image
-        const newScale = originalDimensions.width / originalPositions["size"][0];
+
+        setSize([originalDimensions.width, originalDimensions.height]);
+        setOffset([-originalDimensions.width / 2, originalDimensions.height / 2, 0])
+
+        setGroundGeo(new THREE.PlaneGeometry(originalDimensions.width, originalDimensions.height, 256, 256))
+        const newScale = originalDimensions.width / positions[visualizationIndex]["size"][0];
         setScale(newScale);
       });
-  }, []);
+  }, [visualizationIndex]);
 
   useEffect(() => {
-    const disMap = new THREE.TextureLoader().load(heightmapImage);
+    const disMap = new THREE.TextureLoader().load(heightmaps[visualizationIndex]);
     disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
     disMap.repeat.set(1, 1);
 
-    const colorMap = new THREE.TextureLoader().load(originalImage);
+    const colorMap = new THREE.TextureLoader().load(images[visualizationIndex]);
     colorMap.wrapS = colorMap.wrapT = THREE.RepeatWrapping;
     colorMap.repeat.set(1, 1);
 
@@ -68,14 +79,14 @@ function Explore() {
 
     const mesh = new THREE.Mesh(groundGeo, groundMap);
     setGroundMesh(mesh);
-  }, [heightmapImage, originalImage]);
+  }, [visualizationIndex, groundGeo]);
 
   useEffect(() => {
     if (!groundMesh) return;
 
-    for (let i = 0; i < scaledPositions.length; i += sampleRate) {
-      const [x, y, z] = scaledPositions[i];
-      pathPoints.push(new THREE.Vector3(x + offset[0], -z + offset[1], y * 0.7 + offset[2]));
+    for (let i = 0; i < positions[visualizationIndex]["path"].length; i += sampleRate) {
+      const [x, y, z] = positions[visualizationIndex]["path"][i];
+      pathPoints.push(new THREE.Vector3(x * scale + offset[0], -z * scale + offset[1], y * 0.5 + offset[2]));
     }
     console.log(`Total path points: ${pathPoints.length}`);
     const lineGeometry = new LineGeometry();
@@ -99,57 +110,88 @@ function Explore() {
       lineGeometry.dispose();
       lineMaterial.dispose();
     };
-  }, [groundMesh, scale]);
+  }, [groundMesh, scale, groundGeo, offset, visualizationIndex]);
 
   const [index, setIndex] = useState(0);
   const roverRef = useRef(null);
 
   const [targetPosition, setTargetPosition] = useState(new THREE.Vector3());
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (roverPoints.length > 0) {
-      // Calculate the current and next index
-      const currentIndex = index;
-      const nextIndex = (currentIndex + 1) % roverPoints.length;
-      
-      const currentPoint = roverPoints[currentIndex];
-      let nextPoint = roverPoints[nextIndex];
-      nextPoint = new THREE.Vector3(nextPoint.x, nextPoint.z, -nextPoint.y);
+  useEffect(() => {
+    let animationId;
+  
+    const animate = () => {
+      if (roverPoints.length > 0) {
+        if (roverRef.current) {
+          const roverPosition = roverRef.current.position;
+          const speed = 0.75 / finenesses[visualizationIndex]; // Adjust the speed as necessary
+  
+          // Move the rover smoothly towards the target position
+          roverPosition.lerp(targetPosition, speed);
+  
+          // Update rotation based on direction to the target
+          const direction = new THREE.Vector3().subVectors(targetPosition, roverPosition);
+          direction.y = 0; // Keep Y zero for horizontal rotation
+          if (direction.length() > 0.01) { // Only rotate if there's significant direction
+            direction.normalize();
+            const yaw = Math.atan2(direction.x, direction.z);
+            roverRef.current.rotation.y = yaw;
+          }
+  
+          // If the rover is close enough to the target, update to the next point
+          if (roverPosition.distanceTo(targetPosition) < finenesses[visualizationIndex]) {
+            let nextIndex = (index + 1) ;
 
-      // Set the target position to the next point
-      setTargetPosition(nextPoint.clone());
+            if (nextIndex >= roverPoints.length){
+              nextIndex = 0
+              roverRef.current.position.x = roverPoints[0].x;
+              roverRef.current.position.y = roverPoints[0].z;
+              roverRef.current.position.z = -roverPoints[0].y;
+            }
 
-      // Move the rover smoothly towards the target position
-      if (roverRef.current) {
-        const roverPosition = roverRef.current.position;
-        const speed = 0.6; // Adjust the speed as necessary
-
-        // Lerp to the target position
-        roverPosition.lerp(targetPosition, speed);
-        
-        // Update rotation based on direction to the target
-        const direction = new THREE.Vector3().subVectors(targetPosition, roverPosition);
-        direction.y = 0; // Keep Y zero for horizontal rotation
-        if (direction.length() > 0.01) { // Only rotate if there's significant direction
-          direction.normalize();
-          const yaw = Math.atan2(direction.x, direction.z);
-          roverRef.current.rotation.y = yaw;
-        } else {
-          // If close enough to the target, increment the index
-          setIndex(nextIndex);
+            const nextPoint = roverPoints[nextIndex];
+            setTargetPosition(new THREE.Vector3(nextPoint.x, nextPoint.z, -nextPoint.y));
+            setIndex(nextIndex);
+          }
         }
+  
+        // Request the next animation frame
+        animationId = requestAnimationFrame(animate);
       }
-    }
-  }, 100);
+    };
+  
+    // Start the animation loop
+    animationId = requestAnimationFrame(animate);
+  
+    // Cleanup on component unmount
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [roverPoints, index]);
 
-  return () => {
-    clearInterval(interval);
-  };
-}, [roverPoints, index, targetPosition]);
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const key = event.key;
+      if (key >= '0' && key <= '3') {
+        setVisualizationIndex(parseInt(key));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <div id="explore-container">
+      <div id="exploration-selector">
+        {heightmaps.map((_, index) => {
+          return (
+            <h3 onClick={() => setVisualizationIndex(index)} className={`${visualizationIndex == index ? "chosenDisplay" : ""} button-38`} key={index}>{index}</h3>
+          )
+        })}
+      </div>
       <Canvas camera={{ position: [0, 500, 250], fov: 75,  near: 0.1, far: 10000, rotation: [-Math.PI / 2, 0, 0] }}>
         <ambientLight intensity={0.5} />
         <directionalLight color="white" intensity={1} position={[0, 10, 5]} />

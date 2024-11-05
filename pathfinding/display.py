@@ -9,9 +9,10 @@ pygame.init()
 fps = 60
 fpsClock = pygame.time.Clock()
  
-width, height = 1280, 381
-image_file_name = "bg.png"
-bg = pygame.transform.scale(pygame.image.load(image_file_name), (width, height))
+# width, height = 1280, 381
+image_file_name = "bg2.png"
+bg = pygame.image.load(image_file_name)
+width, height = bg.get_width(), bg.get_height()
 
 
 class PathfindingDisplay:

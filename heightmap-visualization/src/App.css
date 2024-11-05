@@ -1,3 +1,45 @@
+#exploration-selector{
+  position: absolute;
+  width: 30vw;
+  height: 10vh;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 1;
+}
+
+#exploration-selector h3{
+  width: 5vw;
+  height: 5vh;
+  font-size: 0.75vw;
+  background-color: rgb(172, 150, 150);
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  text-decoration: none #D1D5DB solid;
+  text-decoration-thickness: auto;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.button-38:hover {
+  background-color: rgb(150, 130, 130) !important;
+}
+
+.button-38:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.button-38:focus-visible {
+  box-shadow: none;
+}
+
 .scroll-descriptions{
   font-size: 1.5vw;
 
@@ -47,7 +89,7 @@
   justify-content: space-evenly;
   align-items: center;
   width: 100vw;
-  height: 100vh;
+  height: 170vh;
   scrollbar-width: none; 
   -ms-overflow-style: none;  
 }
@@ -132,6 +174,7 @@
 }
 
 #homepage-container{
+  
   padding: 0;
   margin: 0;
 }

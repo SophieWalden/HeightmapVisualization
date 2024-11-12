@@ -89,8 +89,8 @@ function Homepage(props){
                     <Animator animation={FadeUp}>
                     <div className="scroll-container">
                         <div className="scroll-text">
-                            <h3>Run Pathfinding Algorithims</h3>
-                            <p className="scroll-descriptions">Both A* and ROT* Pathfinding algorithims are run on the depth map to plot an estimated route for a rover to take throughout the drone footage</p>
+                            <h3>Run Pathfinding Algorithim</h3>
+                            <p className="scroll-descriptions">An A* pathfinding algorithim is ran on the depth map to plot an estimated route for a rover to take throughout the drone footage</p>
                         </div> 
                         <img id="pathfinding-image" src="https://i.imgur.com/8nyCmF3.png"></img>
                     </div>

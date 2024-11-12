@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import "../App.css"
 import { Animator, ScrollContainer, ScrollPage, batch, Fade, FadeIn, FadeOut, Move, MoveIn, MoveOut, Sticky, StickyIn, StickyOut, Zoom, ZoomIn, ZoomOut } from "react-scroll-motion";
 
@@ -5,6 +6,11 @@ import { Animator, ScrollContainer, ScrollPage, batch, Fade, FadeIn, FadeOut, Mo
 function Homepage(props){
     const FadeUp = batch(Fade(), Move(0, 600), Sticky());
     
+    useEffect(() => {
+
+
+    }, [props.finishLoading]);
+
     return (
         <div id="homepage-container">
             <ScrollContainer className="scroll-container">
@@ -35,6 +41,7 @@ function Homepage(props){
                             <h2>Pathfinding from Drone Footage</h2>
                             <h3>By Dyllon Dunton and Sophie Walden</h3>
                         
+                            <div className={`${props.finishLoading ? '' : 'hiddenDivT'}`}><div className="arrow animated bounce"></div></div>
                     </div>
             
                     </Animator>

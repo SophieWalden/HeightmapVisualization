@@ -25,7 +25,7 @@ const RoverModel = forwardRef(({ position, loading, setLoading }, ref) => {
 
 
 
-function Explore() {
+function Explore(props) {
   const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg"];
   const images = ["https://i.imgur.com/2uUjPaA.png", "https://i.imgur.com/Geop1Vf.jpeg", "https://i.imgur.com/mUJITfR.png", "https://i.imgur.com/qJgQvHn.jpeg"]
   const [groundMesh, setGroundMesh] = useState(null);
@@ -47,6 +47,12 @@ function Explore() {
   const [roverPoints, setRoverPoints] = useState([]);
 
   const sampleRate = 20; 
+
+  useEffect(() => {
+
+    document.body.style.overflow = loading ? "hidden" : "auto";
+    if (loading == false) props.setFinishLoading(true);
+  }, [loading]);
 
   useEffect(() => {
     // Function to load an image and return its dimensions

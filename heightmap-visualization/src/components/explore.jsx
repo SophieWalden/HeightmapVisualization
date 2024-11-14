@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
 import '../App.css';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { FlyControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
@@ -18,12 +18,48 @@ import positions4 from '../../src/path4.json';
 const RoverModel = forwardRef(({ position, loading, setLoading }, ref) => {
   const { scene } = useGLTF('/HeightmapVisualization/scene.gltf');
   if (loading == true) setLoading(false);
-  scene.scale.set(0.00035, 0.00035, 0.00035); // Adjust the scale as needed
+  scene.scale.set(0.00035, 0.00035, 0.00035); 
   return <primitive object={scene} position={position} ref={ref} />;
 });
 
 
+function CameraControl({ position, fov, near, far, rotation, changePositionCommand, activeCamera }) {
+  const { camera } = useThree();
 
+  useEffect(() => {
+    camera.position.set(...position); 
+    camera.fov = fov;                
+    camera.near = near;         
+    camera.far = far;                
+    camera.rotation.set(...rotation);
+    camera.updateProjectionMatrix();  
+
+    camera.lookAt(0, 0, 0);        
+  }, []);
+
+  useEffect(() => {
+    if (changePositionCommand[0] !== 0 || changePositionCommand[1] !== 0 || changePositionCommand[2] !== 0 && activeCamera=="rover") {
+      let animationId;
+  
+      const animateCameraPosition = () => {
+        const targetPosition = new THREE.Vector3(...changePositionCommand);
+        camera.position.lerp(targetPosition, 0.1); 
+  
+        if (camera.position.distanceTo(targetPosition) > 0.01) {
+          animationId = requestAnimationFrame(animateCameraPosition);
+        }
+      };
+  
+      animateCameraPosition();
+  
+      return () => {
+        cancelAnimationFrame(animationId);
+      };
+    }
+  }, [changePositionCommand.x, changePositionCommand.y, changePositionCommand.z, activeCamera]);
+
+  return null;
+}
 
 function Explore(props) {
   const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg"];
@@ -45,6 +81,12 @@ function Explore(props) {
   const [visualizationIndex, setVisualizationIndex] = useState(1);
   let pathPoints = [];
   const [roverPoints, setRoverPoints] = useState([]);
+  const [changePositionCommand, setChangePositionCommand] = useState([0, 0, 0])
+  const [cameraPosition, setCameraPosition] = useState([0, 500, 250]);
+  const defaultFov = 75;
+  const defaultNear = 0.1;
+  const defaultFar = 10000;
+  const defaultRotation = [-Math.PI / 2, 0, 0];
 
   const sampleRate = 20; 
 
@@ -135,24 +177,30 @@ function Explore(props) {
     let animationId;
   
     const animate = () => {
+      
       if (roverPoints.length > 0) {
         if (roverRef.current) {
           const roverPosition = roverRef.current.position;
-          const speed = 0.75 / finenesses[visualizationIndex]; // Adjust the speed as necessary
+         
+
+          const speed = 0.75 / finenesses[visualizationIndex]; 
   
-          // Move the rover smoothly towards the target position
           roverPosition.lerp(targetPosition, speed);
   
-          // Update rotation based on direction to the target
           const direction = new THREE.Vector3().subVectors(targetPosition, roverPosition);
-          direction.y = 0; // Keep Y zero for horizontal rotation
-          if (direction.length() > 0.01) { // Only rotate if there's significant direction
+          direction.y = 0; 
+          if (direction.length() > 0.01) { 
             direction.normalize();
             const yaw = Math.atan2(direction.x, direction.z);
             roverRef.current.rotation.y = yaw;
           }
-  
-          // If the rover is close enough to the target, update to the next point
+          if (activeCamera == 'rover'){
+            // let point = [nextPoint.x, nextPoint.z, -nextPoint.y+5];
+            let cameraPoint = new THREE.Vector3(roverPosition.x, roverPosition.y + 50, roverPosition.z)
+            setChangePositionCommand(cameraPoint);
+          }
+
+
           if (roverPosition.distanceTo(targetPosition) < finenesses[visualizationIndex]) {
             let nextIndex = (index + 1) ;
 
@@ -169,15 +217,12 @@ function Explore(props) {
           }
         }
   
-        // Request the next animation frame
         animationId = requestAnimationFrame(animate);
       }
     };
-  
-    // Start the animation loop
+
     animationId = requestAnimationFrame(animate);
-  
-    // Cleanup on component unmount
+
     return () => {
       cancelAnimationFrame(animationId);
     };
@@ -188,6 +233,9 @@ function Explore(props) {
       const key = event.key;
       if (key >= '0' && key <= '3') {
         setVisualizationIndex(parseInt(key));
+      }
+      if (key == 'c'){
+        setActiveCamera((oldActiveCamera) => oldActiveCamera == "main" ? "rover" : "main")
       }
     };
 
@@ -217,13 +265,23 @@ function Explore(props) {
             <h3 onClick={() => setVisualizationIndex(index)} className={`${visualizationIndex == index ? "chosenDisplay" : ""} button-38`} key={index}>{index}</h3>
           )
         })}
+        <h3 onClick={() => setActiveCamera(activeCamera == "main" ? "rover" : "main")} className={`button-38`}>Change Camera</h3>
       </div>
 
      
         
         
   
-      <Canvas className={`${loading ? "hideCanvas" : ""}`} id="canvas" camera={{ position: [0, 500, 250], fov: 75,  near: 0.1, far: 10000, rotation: [-Math.PI / 2, 0, 0] }}>
+      <Canvas className={`${loading ? "hideCanvas" : ""}`} id="canvas" >
+      <CameraControl 
+          position={cameraPosition}
+          fov={defaultFov}
+          near={defaultNear}
+          far={defaultFar}
+          rotation={defaultRotation} 
+          changePositionCommand={changePositionCommand}
+          activeCamera={activeCamera}
+        />
         <ambientLight intensity={0.5} />
         <directionalLight color="white" intensity={1} position={[0, 10, 5]} />
         <directionalLight color="white" intensity={0.5} position={[-5, -5, 10]} />
@@ -234,7 +292,8 @@ function Explore(props) {
 
         <RoverModel loading={loading} setLoading={setLoading} position={[0, 0, 0]} ref={roverRef} />
 
-        <FlyControls movementSpeed={100} rollSpeed={0.5} dragToLook={false} />
+        <FlyControls movementSpeed={100} rollSpeed={0.5} dragToLook={false} enableDamping={true}
+  dampingFactor={0.25} />
       </Canvas>
     </div>
   );

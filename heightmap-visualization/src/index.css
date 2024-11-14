@@ -5,10 +5,10 @@ html{
   padding: 0;
 
   font-family: monospace;
-  background-color: rgb(165, 165, 165);
   color: black;
   scrollbar-width: none; 
   -ms-overflow-style: none;  
+  
 }
 
 :root::-webkit-scrollbar,

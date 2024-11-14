@@ -1,3 +1,23 @@
+.exploreSwitchButtonTab{
+  background: linear-gradient(to bottom, #141E30, #243B55);
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fade-in {
+  opacity: 1;
+  transition: opacity 3s ease-in-out;
+}
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 3s ease-in-out;
+  pointer-events: none;
+}
+
 #exploration-selector{
   position: absolute;
   width: 30vw;
@@ -6,6 +26,12 @@
   justify-content: space-evenly;
   align-items: center;
   z-index: 1;
+}
+
+
+#pathfinding-image{
+  width: 40vw;
+  height: auto ;
 }
 
 .hiddenDivT{
@@ -60,6 +86,7 @@
     transform: translateY(-15px);
   }
 }
+
 
 .arrow {
   position: fixed;
@@ -152,6 +179,12 @@
 
 .scroll-text{
   width: 40vw;
+  transition: all 0.5s ease;
+
+}
+
+.scroll-text:hover{
+  transform: translateX(10px);
 }
 
 
@@ -163,7 +196,7 @@
   height: 100vh;
   margin: 0;
   padding: 0;
-  background: linear-gradient(to bottom, #87CEEB, #FFFFFF);
+  background: linear-gradient(to bottom, #141E30, #243B55);
   scrollbar-width: none; 
   -ms-overflow-style: none;  
 }
@@ -184,6 +217,15 @@
   height: 0vh !important;
 }
 
+.displayVideo{
+  border-radius: 10px;
+  box-shadow: 0px 5px 1vw black;
+  transition: all 0.5s ease;
+}
+
+.displayVideo:hover{
+  transform: translateY(-10px)
+}
 
 #homepage{
   height: 900vh;
@@ -202,6 +244,9 @@
   height: 170vh;
   scrollbar-width: none; 
   -ms-overflow-style: none;  
+  background-color: rgb(165, 165, 165);
+  box-shadow: inset 10vw 0 10vw -10vw black, inset -10vw 0 10vw -10vw black;
+
 }
 
 .scroll-container img{

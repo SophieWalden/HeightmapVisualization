@@ -245,6 +245,36 @@ function Explore(props) {
     };
   }, []);
 
+  let [clickPoints, setClickPoints] = useState([]);
+  function handleClick(e){
+    setClickPoints((oldPoints) => [...oldPoints, e.point]);
+  }
+
+  useEffect(() => {
+    if (clickPoints.length == 0) return;
+
+    const lineGeometry = new LineGeometry();
+    lineGeometry.setPositions(clickPoints.flatMap(point => [point.x, point.z, point.y+200]));
+
+    const lineMaterial = new LineMaterial({
+      color: 0xff0000,
+      linewidth: 0, 
+      depthTest: true,
+      transparent: true,
+    });
+
+    const line = new Line2(lineGeometry, lineMaterial);
+    line.computeLineDistances();
+
+    groundMesh.add(line);
+
+    return () => {
+      groundMesh.remove(line);
+      lineGeometry.dispose();
+      lineMaterial.dispose();
+    };
+  }, [clickPoints, groundMesh]);
+
   return (
     <div id="explore-container">
 
@@ -287,7 +317,7 @@ function Explore(props) {
         <directionalLight color="white" intensity={0.5} position={[-5, -5, 10]} />
 
         {groundMesh && (
-          <primitive object={groundMesh} rotation={[-Math.PI / 2, 0, 0]} />
+          <primitive onClick={handleClick} object={groundMesh} rotation={[-Math.PI / 2, 0, 0]} />
         )}
 
         <RoverModel loading={loading} setLoading={setLoading} position={[0, 0, 0]} ref={roverRef} />

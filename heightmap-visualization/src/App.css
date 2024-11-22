@@ -20,7 +20,7 @@
 
 #exploration-selector{
   position: absolute;
-  width: 30vw;
+  width: 100vw;
   height: 10vh;
   display: flex;
   justify-content: space-evenly;
@@ -34,9 +34,6 @@
   height: auto ;
 }
 
-.hiddenDivT{
-  opacity: 0;
-}
 
 @-moz-keyframes bounce {
   0%, 20%, 50%, 80%, 100% {

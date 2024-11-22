@@ -14,6 +14,7 @@ import positions1 from '../../src/path.json';
 import positions2 from '../../src/path2.json';
 import positions3 from '../../src/path3.json';
 import positions4 from '../../src/path4.json';
+import positions5 from '../../src/path5.json';
 
 const RoverModel = forwardRef(({ position, loading, setLoading }, ref) => {
   const { scene } = useGLTF('/HeightmapVisualization/scene.gltf');
@@ -45,7 +46,7 @@ function CameraControl({ position, fov, near, far, rotation, changePositionComma
         const targetPosition = new THREE.Vector3(...changePositionCommand);
         camera.position.lerp(targetPosition, 0.1); 
   
-        if (camera.position.distanceTo(targetPosition) > 0.01) {
+        if (camera.position.distanceTo(targetPosition) > 0.01 && activeCamera == 'rover') {
           animationId = requestAnimationFrame(animateCameraPosition);
         }
       };
@@ -62,22 +63,29 @@ function CameraControl({ position, fov, near, far, rotation, changePositionComma
 }
 
 function Explore(props) {
-  const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg"];
-  const images = ["https://i.imgur.com/2uUjPaA.png", "https://i.imgur.com/Geop1Vf.jpeg", "https://i.imgur.com/mUJITfR.png", "https://i.imgur.com/qJgQvHn.jpeg"]
+  
+  // Three things to set when adding a new heightmap
+  const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg", "https://i.imgur.com/mjFrmVL.png"];
+  const images = ["https://i.imgur.com/2uUjPaA.png", "https://i.imgur.com/Geop1Vf.jpeg", "https://i.imgur.com/mUJITfR.png", "https://i.imgur.com/qJgQvHn.jpeg", "https://i.imgur.com/1iT8xB5.png"]
+  const finenesses = [60, 60, 60, 1, 60];
+  
+  
+  
+  
+  
+  
   const [groundMesh, setGroundMesh] = useState(null);
   const [size, setSize] = useState(1, 1);
   const [groundGeo, setGroundGeo] = useState(new THREE.PlaneGeometry(size[0], size[1], 256, 256))
 
   const [loading, setLoading] = useState(true);
-
-
-  const finenesses = [60, 60, 60, 1];
   const [offset, setOffset] = useState([-3313/2, 986/2,0]);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState([1, 1]);
+
   const [activeCamera, setActiveCamera] = useState('main');
   const roverCameraRef = useRef(new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)); // Rover camera
 
-  const positions = [positions1, positions2, positions3, positions4]
+  const positions = [positions1, positions2, positions3, positions4, positions5];
   const [visualizationIndex, setVisualizationIndex] = useState(1);
   let pathPoints = [];
   const [roverPoints, setRoverPoints] = useState([]);
@@ -92,7 +100,6 @@ function Explore(props) {
 
   useEffect(() => {
 
-    document.body.style.overflow = loading ? "hidden" : "auto";
     if (loading == false) props.setFinishLoading(true);
   }, [loading]);
 
@@ -113,8 +120,10 @@ function Explore(props) {
         setOffset([-originalDimensions.width / 2, originalDimensions.height / 2, 0])
 
         setGroundGeo(new THREE.PlaneGeometry(originalDimensions.width, originalDimensions.height, 256, 256))
-        const newScale = originalDimensions.width / positions[visualizationIndex]["size"][0];
-        setScale(newScale);
+        const XScale = originalDimensions.width / positions[visualizationIndex]["size"][0];
+        const YScale = originalDimensions.height / positions[visualizationIndex]["size"][1];
+
+        setScale([XScale, YScale]);
       });
   }, [visualizationIndex]);
 
@@ -142,7 +151,7 @@ function Explore(props) {
 
     for (let i = 0; i < positions[visualizationIndex]["path"].length; i += sampleRate) {
       const [x, y, z] = positions[visualizationIndex]["path"][i];
-      pathPoints.push(new THREE.Vector3(x * scale + offset[0], -z * scale + offset[1], y * 0.5 + offset[2]));
+      pathPoints.push(new THREE.Vector3(x * scale[0] + offset[0], -z * scale[1] + offset[1], y * 0.5 + offset[2]));
     }
     console.log(`Total path points: ${pathPoints.length}`);
     const lineGeometry = new LineGeometry();
@@ -166,7 +175,7 @@ function Explore(props) {
       lineGeometry.dispose();
       lineMaterial.dispose();
     };
-  }, [groundMesh, scale, groundGeo, offset, visualizationIndex]);
+  }, [groundMesh, scale[0], scale[1], groundGeo, offset, visualizationIndex]);
 
   const [index, setIndex] = useState(0);
   const roverRef = useRef(null);
@@ -177,11 +186,10 @@ function Explore(props) {
     let animationId;
   
     const animate = () => {
-      
       if (roverPoints.length > 0) {
         if (roverRef.current) {
           const roverPosition = roverRef.current.position;
-         
+
 
           const speed = 0.75 / finenesses[visualizationIndex]; 
   
@@ -231,11 +239,12 @@ function Explore(props) {
   useEffect(() => {
     const handleKeyDown = (event) => {
       const key = event.key;
-      if (key >= '0' && key <= '3') {
+      if (key >= '0' && key <= heightmaps.length.toString()) {
         setVisualizationIndex(parseInt(key));
       }
       if (key == 'c'){
         setActiveCamera((oldActiveCamera) => oldActiveCamera == "main" ? "rover" : "main")
+        
       }
     };
 
@@ -245,35 +254,7 @@ function Explore(props) {
     };
   }, []);
 
-  let [clickPoints, setClickPoints] = useState([]);
-  function handleClick(e){
-    setClickPoints((oldPoints) => [...oldPoints, e.point]);
-  }
 
-  useEffect(() => {
-    if (clickPoints.length == 0) return;
-
-    const lineGeometry = new LineGeometry();
-    lineGeometry.setPositions(clickPoints.flatMap(point => [point.x, point.z, point.y+200]));
-
-    const lineMaterial = new LineMaterial({
-      color: 0xff0000,
-      linewidth: 0, 
-      depthTest: true,
-      transparent: true,
-    });
-
-    const line = new Line2(lineGeometry, lineMaterial);
-    line.computeLineDistances();
-
-    groundMesh.add(line);
-
-    return () => {
-      groundMesh.remove(line);
-      lineGeometry.dispose();
-      lineMaterial.dispose();
-    };
-  }, [clickPoints, groundMesh]);
 
   return (
     <div id="explore-container">
@@ -317,7 +298,7 @@ function Explore(props) {
         <directionalLight color="white" intensity={0.5} position={[-5, -5, 10]} />
 
         {groundMesh && (
-          <primitive onClick={handleClick} object={groundMesh} rotation={[-Math.PI / 2, 0, 0]} />
+          <primitive object={groundMesh} rotation={[-Math.PI / 2, 0, 0]} />
         )}
 
         <RoverModel loading={loading} setLoading={setLoading} position={[0, 0, 0]} ref={roverRef} />

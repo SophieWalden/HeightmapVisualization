@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import "../App.css"
 import { Animator, ScrollContainer, ScrollPage, batch, Fade, FadeIn, FadeOut, Move, MoveIn, MoveOut, Sticky, StickyIn, StickyOut, Zoom, ZoomIn, ZoomOut } from "react-scroll-motion";
-
+import CircleLoader from "react-spinners/ClipLoader";
 
 
 function Homepage(props){
@@ -38,7 +38,7 @@ function Homepage(props){
                             <h2>Pathfinding from Drone Footage</h2>
                             <h3>By Dyllon Dunton and Sophie Walden</h3>
                         
-                            <div className={`${props.finishLoading ? '' : 'hiddenDivT'}`}><div className="arrow animated bounce"></div></div>
+                            <div><div className="arrow animated bounce"></div></div>
                             
                     </div>
             
@@ -95,7 +95,15 @@ function Homepage(props){
                     <ScrollPage>      
                         <Animator animation={FadeUp}>
                             <div className="exploreSwitchButtonTab">
-                                <button onClick={() => props.setTab("explore")} className="switch-tab-button button-30">Explore The Footage</button>
+                                {props.finishLoading ? <div><button onClick={() => props.setTab("explore")} className="switch-tab-button button-30">Explore The Footage</button></div> : <div> <h3> Loading </h3>
+          <CircleLoader
+            className="loader"
+            color={"#FFFFFF"}
+            size={150}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          /></div>}
+                                
                             </div>
                         </Animator>       
                     </ScrollPage>

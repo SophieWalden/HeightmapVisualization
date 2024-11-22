@@ -11,15 +11,10 @@ import pygame
 from pygame.locals import *
 
 from termcolor import colored
-import torch
 import random
 import numpy as np
 from skimage.transform import resize
-
-
-DEPTH_FILENAME = "depth_suburb.pt"
-COLORED_FILENAME = "colored_suburb.pt"
-SEGMENTATION_FILENAME = "segmented_suburb.pt"
+import torch
 
 
 def load_pt_file(filename):
@@ -34,20 +29,8 @@ def load_pt_file(filename):
 
     return data_transposed
 
-bg = pygame.surfarray.make_surface(load_pt_file(DEPTH_FILENAME))
 
- 
-pygame.init()
- 
-fps = 60
-fpsClock = pygame.time.Clock()
- 
-# image_file_name = "bg4.jpg"
-# bg = pygame.image.load(image_file_name)
-width, height = bg.get_width() // 3, bg.get_height() // 3
 
-bg = pygame.transform.scale(bg, (width, height))
-screen = pygame.display.set_mode((width, height))
 
 import heapq, math
 def cost(node, origin, target, heightmap, segmentation):
@@ -57,7 +40,7 @@ def cost(node, origin, target, heightmap, segmentation):
 
     return (distance_from_origin + distance_from_target * (241 - segmentation_value))
 
-def AStar(origin, target, heightmap, segmentation_map):
+def AStar(origin, target, heightmap, segmentation_map, width, height):
     seenNodes = set([])
     nodes = []
     chosenPath = []
@@ -83,23 +66,37 @@ def AStar(origin, target, heightmap, segmentation_map):
     
 
 class Pathfinding():
-    def __init__(self):
-        self.screen = pygame.display.set_mode([width, height])
+    def __init__(self, filename):
+        self.DEPTH_FILENAME = f"depth_{filename}.pt"
+        self.COLORED_FILENAME = f"colored_{filename}.pt"
+        self.SEGMENTATION_FILENAME = f"segmented_{filename}.pt"
+        self.bg = pygame.surfarray.make_surface(load_pt_file(self.DEPTH_FILENAME))
+
+        pygame.init()
+ 
+        self.fps = 60
+        self.fpsClock = pygame.time.Clock()
+        self.width, self.height = self.bg.get_width() // 3, self.bg.get_height() // 3
+
+        self.bg = pygame.transform.scale(self.bg, (self.width, self.height))
+
+
+        self.screen = pygame.display.set_mode([self.width, self.height])
         self.positions = []
         self.cooldown = False
         self.path = []
         self.computed = []
 
-        self.values = [[sum(bg.get_at((i, j))[:3])//3 for i in range(width)] for j in range(height)]
-        self.segmentation_values = np.repeat(np.flipud(resize(torch.load(SEGMENTATION_FILENAME), (len(self.values[0]), len(self.values)))) * 120, 3, axis=-1)
+        self.values = [[sum(self.bg.get_at((i, j))[:3])//3 for i in range(self.width)] for j in range(self.height)]
+        self.segmentation_values = np.repeat(np.flipud(resize(torch.load(self.SEGMENTATION_FILENAME), (len(self.values[0]), len(self.values)))) * 120, 3, axis=-1)
         self.display_segmentation = pygame.surfarray.make_surface(self.segmentation_values)
-        self.display_image = pygame.transform.scale(pygame.surfarray.make_surface(load_pt_file(COLORED_FILENAME)), (width, height))
+        self.display_image = pygame.transform.scale(pygame.surfarray.make_surface(load_pt_file(self.COLORED_FILENAME)), (self.width, self.height))
         self.seenNodes = []
         self.mode = 0
 
     def draw(self):
 
-        self.screen.blit([bg, self.display_segmentation, self.display_image][self.mode], (0,0))
+        self.screen.blit([self.bg, self.display_segmentation, self.display_image][self.mode], (0,0))
     
 
         for event in pygame.event.get():
@@ -123,7 +120,7 @@ class Pathfinding():
 
         
         pygame.display.flip()
-        fpsClock.tick(fps)
+        self.fpsClock.tick(self.fps)
 
     def events(self):
         pressed, pos = pygame.mouse.get_pressed(), pygame.mouse.get_pos()
@@ -146,12 +143,12 @@ class Pathfinding():
             ending_point = self.positions[1]
 
 
-            self.path = AStar(starting_point, ending_point, self.values, self.segmentation_values)
+            self.path = AStar(starting_point, ending_point, self.values, self.segmentation_values, self.width, self.height)
             self.seenNodes = self.path
             import json
             with open("output/path.json", "w") as output_file:
                 output_data = {}
-                output_data["size"] = [width, height]
+                output_data["size"] = [self.width, self.height]
                 output_data["path"] = self.add_y_values(self.path)
 
                 json.dump(output_data, output_file)
@@ -167,8 +164,8 @@ class Pathfinding():
             Converts depth_suburb and colored_suburb back to images so the website can use them
         
         """
-        pygame.image.save(pygame.surfarray.make_surface(load_pt_file(DEPTH_FILENAME)), "output/heightmap.png")
-        pygame.image.save(pygame.surfarray.make_surface(load_pt_file(COLORED_FILENAME)), "output/original.png")
+        pygame.image.save(pygame.surfarray.make_surface(load_pt_file(self.DEPTH_FILENAME)), "output/heightmap.png")
+        pygame.image.save(pygame.surfarray.make_surface(load_pt_file(self.COLORED_FILENAME)), "output/original.png")
 
 
     def add_y_values(self, path):
@@ -186,4 +183,5 @@ class Pathfinding():
             self.events()
             self.path_find()
 
-Pathfinding().main_loop()
+if __name__ == "__main__":
+    Pathfinding("suburb").main_loop()

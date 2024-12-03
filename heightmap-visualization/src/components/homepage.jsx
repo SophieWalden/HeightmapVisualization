@@ -38,7 +38,14 @@ function Homepage(props){
                             <h2>Pathfinding from Drone Footage</h2>
                             <h3>By Dyllon Dunton and Sophie Walden</h3>
                         
-                            <div><div className="arrow animated bounce"></div></div>
+                                        <div><CircleLoader
+                                className={`loader  ${props.finishLoading ? 'hiddenDivT' : ''}`}
+                                color={"#FFFFFF"}
+                                size={150}
+                                aria-label="Loading Spinner"
+                                data-testid="loader"
+                            /></div>
+                            <div className={`${props.finishLoading ? '' : 'hiddenDivT'}`}><div className="arrow animated bounce"></div></div>
                             
                     </div>
             

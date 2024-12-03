@@ -100,9 +100,10 @@ function Explore(props) {
 
   useEffect(() => {
 
+    document.body.style.overflow = loading ? "hidden" : "auto";
     if (loading == false) props.setFinishLoading(true);
   }, [loading]);
-
+  
   useEffect(() => {
     // Function to load an image and return its dimensions
     const loadImage = (src) => {

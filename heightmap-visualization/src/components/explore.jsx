@@ -15,6 +15,12 @@ import positions2 from '../../src/path2.json';
 import positions3 from '../../src/path3.json';
 import positions4 from '../../src/path4.json';
 import positions5 from '../../src/path5.json';
+import positions6 from "../../src/path6.json";
+import positions7 from "../../src/path7.json"
+import positions8 from "../../src/path8.json";
+import positions9 from "../../src/path9.json";
+import positions10 from "../../src/path10.json";
+import positions11 from "../../src/path11.json"
 
 const RoverModel = forwardRef(({ position, loading, setLoading }, ref) => {
   const { scene } = useGLTF('/HeightmapVisualization/scene.gltf');
@@ -65,10 +71,10 @@ function CameraControl({ position, fov, near, far, rotation, changePositionComma
 function Explore(props) {
   
   // Three things to set when adding a new heightmap
-  const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg", "https://i.imgur.com/mjFrmVL.png"];
-  const images = ["https://i.imgur.com/2uUjPaA.png", "https://i.imgur.com/Geop1Vf.jpeg", "https://i.imgur.com/mUJITfR.png", "https://i.imgur.com/qJgQvHn.jpeg", "https://i.imgur.com/1iT8xB5.png"]
-  const finenesses = [60, 60, 60, 1, 60];
-  
+  const heightmaps = ["https://i.imgur.com/LJ0F8QF.png", "https://i.imgur.com/kNedcjy.png", "https://i.imgur.com/SwHm1Cy.png", "https://i.imgur.com/qJgQvHn.jpeg", "https://i.imgur.com/mjFrmVL.png", "https://i.imgur.com/J9F3BT7.png","https://i.imgur.com/eKE0qbT.png", "https://i.imgur.com/1eTx3gP.png", "https://i.imgur.com/TvfKXXv.png","https://i.imgur.com/wqUMl68.png", "https://i.imgur.com/oec1Ncb.png"];
+  const images = ["https://i.imgur.com/2uUjPaA.png", "https://i.imgur.com/Geop1Vf.jpeg", "https://i.imgur.com/mUJITfR.png", "https://i.imgur.com/qJgQvHn.jpeg", "https://i.imgur.com/1iT8xB5.png", "https://i.imgur.com/nuVmo5J.png","https://i.imgur.com/471XZcJ.png", "https://i.imgur.com/n3gjx3j.png", "https://i.imgur.com/j7VGTab.png","https://i.imgur.com/rGkz5vl.png", "https://i.imgur.com/31eHioO.png"]
+  const finenesses = [60, 60, 60, 1, 6, 60, 60, 60, 60, 60, 60];
+  const positions = [positions1, positions2, positions3, positions4, positions5, positions6, positions7, positions8, positions9, positions10, positions11];
   
   
   
@@ -85,7 +91,7 @@ function Explore(props) {
   const [activeCamera, setActiveCamera] = useState('main');
   const roverCameraRef = useRef(new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)); // Rover camera
 
-  const positions = [positions1, positions2, positions3, positions4, positions5];
+  
   const [visualizationIndex, setVisualizationIndex] = useState(1);
   let pathPoints = [];
   const [roverPoints, setRoverPoints] = useState([]);
@@ -240,12 +246,11 @@ function Explore(props) {
   useEffect(() => {
     const handleKeyDown = (event) => {
       const key = event.key;
-      if (key >= '0' && key <= heightmaps.length.toString()) {
-        setVisualizationIndex(parseInt(key));
+      if (['0','1','2','3','4','5'].includes(key)) {
+        setVisualizationIndex([0,1,3,5,8, 10][parseInt(key)])
       }
       if (key == 'c'){
-        setActiveCamera((oldActiveCamera) => oldActiveCamera == "main" ? "rover" : "main")
-        
+        setActiveCamera((oldActiveCamera) => oldActiveCamera == "main" ? "rover" : "main") 
       }
     };
 
@@ -272,12 +277,12 @@ function Explore(props) {
         </div>
 
       <div id="exploration-selector">
-        {heightmaps.map((_, index) => {
+        {heightmaps.filter((w, index) => [0,1,3,5,8, 10].includes(index)).map((_, index) => {
           return (
-            <h3 onClick={() => setVisualizationIndex(index)} className={`${visualizationIndex == index ? "chosenDisplay" : ""} button-38`} key={index}>{index}</h3>
+            <h3 onClick={() => setVisualizationIndex([0,1,3,5,8, 10][index])} className={`${visualizationIndex == index ? "chosenDisplay" : ""} button-30`} key={index}>{["Neighborhood (0)", "Forest (1)", "Maze (2)", "Water (3)", "Beach (4)", "Snow (5)"][index]}</h3>
           )
         })}
-        <h3 onClick={() => setActiveCamera(activeCamera == "main" ? "rover" : "main")} className={`button-38`}>Change Camera</h3>
+        <h3 onClick={() => setActiveCamera(activeCamera == "main" ? "rover" : "main")} className={`button-30`}>Change Camera (C)</h3>
       </div>
 
      
